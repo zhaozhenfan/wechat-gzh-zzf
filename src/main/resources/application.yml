@@ -1,0 +1,61 @@
+# 应用服务 WEB 访问端口
+server:
+  port: 8080
+
+# api参数
+api:
+  app-id: "cli_a75ff515c63f100e"
+  app-secret: "8o4d9IcfXhya27ykQfzlMhUyuz0RN674"
+  app-token: "KVnEbcfMsanFeMsvqC7cQZKWnEh"
+  table-id: "tbl5ohwZCGNFqRaq"
+  page-size: 2
+  url-prefix: "z.eeeob.com"
+
+  request-body-template: |
+    {
+      "view_id": "vew4ItO5xm",
+      "field_names": ["链接", "名字"],
+      "sort": [{
+        "field_name": "更新时间",
+        "desc": false
+      }],
+      "filter": {
+        "conjunction": "and",
+        "conditions": [{
+          "field_name": "名字（内部专用）",
+          "operator": "contains",
+          "value": ["%s"]
+        }]
+      },
+      "automatic_fields": false
+    }
+
+  success-prefix: "-----------搜索成功-----------\n"
+  success-suffix: "\n------------------------------\n请点击链接保存到你的网盘，不保存无法使用完整资源"
+  failure-message: "----------搜索失败----------\n-----------------------------\n请检查搜索关键字或者联系管理员帮找"
+
+  connection-timeout: 5000
+  read-timeout: 10000
+
+  key-word: "帮我搜索"
+  keyword-tip: "请输入前缀为「帮我搜索」的关键词并发送消息，例如：帮我搜索xxx\n\n如果搜不到，请联系管理员微信：vipvip4521"
+
+button:
+  button1-content: "群机器人使用方法：\n直接给公众号发剧名消息即可。\n注意：本群所发内容均为免费分享，资源来自于网络，网盘里的任何广告不要信，谨防上当受骗！"
+  button2-content: "EY_sTePQoAbeL20QSR6tyPvNwXeXSqYycJDv94lK-dU65haTEdrD9O21yBDCD3EP"
+  button3-content: "免责声明：本文档所有数据均来源于互联网公开分X链接，仅供交流学习，请于24小时内删除，请支持正版。\n如有侵犯您的权益，请发送相关证明文件及时与我们联系进行屏蔽删除处理！谢谢"
+
+logging:
+  level:
+    root: INFO
+    com.myapp: DEBUG
+  file:
+    name: ./myapp.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd} [%thread] %-5level %logger{36} - %msg%n"
+
