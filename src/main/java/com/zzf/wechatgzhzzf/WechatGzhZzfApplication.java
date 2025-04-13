@@ -1,8 +1,6 @@
 package com.zzf.wechatgzhzzf;
 
 import com.zzf.wechatgzhzzf.demos.Service.ApiClient;
-import com.zzf.wechatgzhzzf.demos.Service.WechatClient;
-import com.zzf.wechatgzhzzf.demos.utils.TextSplitter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -16,8 +14,6 @@ import java.util.List;
 public class WechatGzhZzfApplication implements ApplicationRunner{
 
     @Autowired
-    private WechatClient wechatClient;
-    @Autowired
     private ApiClient apiClient;
 
     public static void main(String[] args) {
@@ -28,9 +24,6 @@ public class WechatGzhZzfApplication implements ApplicationRunner{
     @Override
     public void run(ApplicationArguments args) throws Exception {
         String results = apiClient.callKobApiAndExtractResults("庆余年");
-//        List<String> list = TextSplitter.splitByParagraphs(results, 3);
-
-//        String results = apiClient.keywordSearch("帮我搜索琉璃");
         System.out.println(results);
     }
 
