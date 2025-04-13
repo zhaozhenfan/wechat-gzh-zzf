@@ -234,6 +234,9 @@ public class ApiClient {
             return searchConfig.getFailureMessage();
         }
 
+        // 存储所有成功的结果
+        List<String> validResults = new ArrayList<>();
+
         // 依次尝试各个搜索接口
         for (String apiUrl : searchConfig.getSearchApiUrls()) {
             try {
@@ -248,9 +251,9 @@ public class ApiClient {
                 // 提取结果
                 String result = extractQuestionAndAnswer(searchResponse);
 
-                // 如果有结果，立即返回
+                // 如果结果非空，加入 validResults
                 if (result != null && !result.trim().isEmpty()) {
-                    return searchConfig.getSuccessPrefix() + result + searchConfig.getSuccessSuffix();
+                    validResults.add(result);
                 }
             } catch (Exception e) {
                 // 当前API查询失败，继续尝试下一个
@@ -258,7 +261,13 @@ public class ApiClient {
             }
         }
 
-        // 所有API都尝试过了，没有结果
+        // 如果有有效结果，拼接返回
+        if (!validResults.isEmpty()) {
+            String combinedResult = String.join("\n", validResults);  // 用换行符拼接多个结果
+            return searchConfig.getSuccessPrefix() + combinedResult + searchConfig.getSuccessSuffix();
+        }
+
+        // 所有API都尝试过了，没有有效结果
         return searchConfig.getFailureMessage();
     }
 

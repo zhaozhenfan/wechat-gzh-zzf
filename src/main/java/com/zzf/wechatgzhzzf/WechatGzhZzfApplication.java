@@ -28,7 +28,7 @@ public class WechatGzhZzfApplication implements ApplicationRunner{
     @Override
     public void run(ApplicationArguments args) throws Exception {
         String results = apiClient.callKobApiAndExtractResults("庆余年");
-//        List<String> list = TextSplitter.splitByParagraphs(results, 3);
+        List<String> list = TextSplitter.splitByParagraphs(results, 3);
 
 //        String results = apiClient.keywordSearch("帮我搜索琉璃");
         System.out.println(results);
