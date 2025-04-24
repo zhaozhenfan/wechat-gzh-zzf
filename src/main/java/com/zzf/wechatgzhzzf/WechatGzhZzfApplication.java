@@ -23,7 +23,7 @@ public class WechatGzhZzfApplication implements ApplicationRunner{
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        String results = apiClient.callKobApiAndExtractResults("庆余年");
+        String results = apiClient.callKobApiAndExtractResults("琉璃");
         System.out.println(results);
     }
 

@@ -264,6 +264,7 @@ public class ApiClient {
 
     private String extractQuestionAndAnswer(String apiResponse) throws JSONException {
         JSONObject responseJson = new JSONObject(apiResponse);
+        int maxResults = searchConfig.getMaxResults(); // 获取最大结果数
 
         // 检查是否有list字段（适用于search接口）
         if (responseJson.has("list")) {
@@ -273,23 +274,24 @@ public class ApiClient {
             }
 
             StringBuilder result = new StringBuilder();
-            for (int i = 0; i < list.length(); i++) {
+            int count = 0;
+            for (int i = 0; i < list.length() && count < maxResults; i++) {
                 JSONObject item = list.getJSONObject(i);
                 String question = item.optString("question", "");
                 String answer = item.optString("answer", "");
 
                 if (!question.isEmpty() || !answer.isEmpty()) {
-                    result.append(question).append("\n").append(answer);
-                    if (i < list.length() - 1) {
-                        result.append("\n\n");
+                    if (count > 0) {
+                        result.append("\n\n"); // 只在两个结果之间添加空行
                     }
+                    result.append(question).append("\n").append(answer);
+                    count++;
                 }
             }
             return result.length() > 0 ? result.toString() : null;
         }
 
         // 检查其他可能的响应格式（适用于其他接口）
-        // 这里可以根据实际API返回格式进行调整
         String question = responseJson.optString("question", "");
         String answer = responseJson.optString("answer", "");
 

@@ -48,6 +48,16 @@ public class SearchConfig {
 
     private String keywordTip;
 
+    private Integer maxResults;
+
+    public Integer getMaxResults() {
+        return maxResults;
+    }
+
+    public void setMaxResults(Integer maxResults) {
+        this.maxResults = maxResults;
+    }
+
     public String getKeywordTip() {
         return keywordTip;
     }
