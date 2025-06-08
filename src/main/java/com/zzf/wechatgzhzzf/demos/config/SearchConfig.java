@@ -32,41 +32,6 @@ public class SearchConfig {
         return SEARCH_API_URLS;
     }
 
-    //提示信息
-    private String successPrefix;
-    private String successSuffix;
-    private String failureMessage;
-
-    private String keyWord;
-
-    private String keywordTip;
-
-    private Integer maxResults;
-
-    public Integer getMaxResults() {
-        return maxResults;
-    }
-
-    public void setMaxResults(Integer maxResults) {
-        this.maxResults = maxResults;
-    }
-
-    public String getKeywordTip() {
-        return keywordTip;
-    }
-
-    public void setKeywordTip(String keywordTip) {
-        this.keywordTip = keywordTip;
-    }
-
-    public String getKeyWord() {
-        return keyWord;
-    }
-
-    public void setKeyWord(String keyWord) {
-        this.keyWord = keyWord;
-    }
-
     public Integer getConnectionTimeout() {
         return connectionTimeout;
     }
@@ -81,30 +46,6 @@ public class SearchConfig {
 
     public void setReadTimeout(Integer readTimeout) {
         this.readTimeout = readTimeout;
-    }
-
-    public String getSuccessPrefix() {
-        return successPrefix;
-    }
-
-    public void setSuccessPrefix(String successPrefix) {
-        this.successPrefix = successPrefix;
-    }
-
-    public String getSuccessSuffix() {
-        return successSuffix;
-    }
-
-    public void setSuccessSuffix(String successSuffix) {
-        this.successSuffix = successSuffix;
-    }
-
-    public String getFailureMessage() {
-        return failureMessage;
-    }
-
-    public void setFailureMessage(String failureMessage) {
-        this.failureMessage = failureMessage;
     }
 
     public String getUrlPrefix() {

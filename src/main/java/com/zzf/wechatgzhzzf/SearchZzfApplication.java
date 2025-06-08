@@ -1,6 +1,7 @@
 package com.zzf.wechatgzhzzf;
 
 import com.zzf.wechatgzhzzf.demos.Service.ApiClient;
+import com.zzf.wechatgzhzzf.demos.entity.Source;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -11,20 +12,20 @@ import java.util.List;
 
 
 @SpringBootApplication
-public class WechatGzhZzfApplication implements ApplicationRunner{
+public class SearchZzfApplication implements ApplicationRunner{
 
     @Autowired
     private ApiClient apiClient;
 
     public static void main(String[] args) {
-        SpringApplication.run(WechatGzhZzfApplication.class, args);
+        SpringApplication.run(SearchZzfApplication.class, args);
 
     }
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        String results = apiClient.callKobApiAndExtractResults("斗破苍穹");
-        System.out.println(results);
+        List<Source> sources = apiClient.callKobApiAndExtractResults("难哄",2);
+        System.out.println(sources);
     }
 
 //    @Override

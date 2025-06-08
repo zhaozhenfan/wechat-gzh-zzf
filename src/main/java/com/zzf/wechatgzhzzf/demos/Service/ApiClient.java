@@ -1,7 +1,8 @@
 package com.zzf.wechatgzhzzf.demos.Service;
 
 import com.zzf.wechatgzhzzf.demos.config.SearchConfig;
-import com.zzf.wechatgzhzzf.demos.web.WxController;
+import com.zzf.wechatgzhzzf.demos.entity.Source;
+import com.zzf.wechatgzhzzf.demos.entity.TransferEngine;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,7 +19,6 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -31,24 +31,10 @@ public class ApiClient {
     private SearchConfig searchConfig;
 
     private static final Logger logger = LoggerFactory.getLogger(ApiClient.class);
-    /**
-     * 处理用户输入，判断是否触发搜索
-     * @param input 用户输入的字符串
-     * @return 搜索结果或提示信息
-     */
-    public String keywordSearch(String input) {
-        // 检查是否以 "帮我搜索" 开头（严格匹配，包含空格校验）
-        if (input != null && input.startsWith(searchConfig.getKeyWord())) {
-            // 移除 "帮我搜索" 并 trim 后传入
-            String searchQuery = input.substring(searchConfig.getKeyWord().length()).trim();
-            return callKobApiAndExtractResults(searchQuery);
-        } else {
-            return searchConfig.getKeywordTip();
-        }
-    }
 
-    public String callKobApiAndExtractResults(String input) {
+    public List<Source> callKobApiAndExtractResults(String input, Integer isType) {
         String token = null;
+        List<Source> res = new ArrayList<>();
         try {
             // 第一步：获取token（所有接口共用同一个token）
             String tokenUrl = "http://" + searchConfig.getUrlPrefix() + "/v/api/getToken";
@@ -56,7 +42,7 @@ public class ApiClient {
             JSONObject tokenJson = new JSONObject(tokenResponse);
             token = tokenJson.getString("token");
         } catch (Exception e) {
-            return searchConfig.getFailureMessage();
+            logger.error(e.getMessage());
         }
 
         // 依次尝试各个搜索接口
@@ -71,76 +57,49 @@ public class ApiClient {
                 String searchResponse = sendPostRequest(apiUrl, requestBody.toString());
 
                 // 提取结果
-                List<String> answers = extractAnswers(searchResponse);
-                Map<String, String> ansResults = processAnswers(answers);
+                extractAnswers(res, searchResponse, isType);
 
-                // 检查Map是否为空
-                if (ansResults == null || ansResults.isEmpty()) {
-                    continue;
-                }
 
-                StringBuilder resultBuilder = new StringBuilder();
-
-                // 添加成功前缀
-                resultBuilder.append(searchConfig.getSuccessPrefix())
-                        .append("\n");
-
-                // 遍历Map并添加键值对
-                for (Map.Entry<String, String> entry : ansResults.entrySet()) {
-                    resultBuilder.append(entry.getKey())  // 添加键
-                            .append("\n")            // 换行
-                            .append(entry.getValue()) // 添加值
-                            .append("\n");           // 换行
-                }
-
-                // 添加成功后缀
-                resultBuilder.append(searchConfig.getSuccessSuffix());
-
-                return resultBuilder.toString();
             } catch (Exception e) {
                 // 当前API查询失败，继续尝试下一个
                 continue;
             }
         }
-
-        // 所有API都尝试过了，没有结果
-        return searchConfig.getFailureMessage();
+        // 所有API都尝试了
+        return res;
     }
 
-    private List<String> extractAnswers(String apiResponse) throws JSONException {
+    private List<Source> extractAnswers(List<Source> res, String apiResponse, Integer isType) throws JSONException {
         JSONObject responseJson = new JSONObject(apiResponse);
-        int maxResults = searchConfig.getMaxResults(); // 获取最大结果数
-        List<String> answerList = new ArrayList<>();
 
         // 处理包含list字段的响应（search接口）
         if (responseJson.has("list")) {
             JSONArray list = responseJson.getJSONArray("list");
-            int count = 0;
-            for (int i = 0; i < list.length() && count < maxResults; i++) {
+            for (int i = 0; i < list.length(); i++) {
                 JSONObject item = list.getJSONObject(i);
+                String questionTextOrigin = item.optString("question", "").trim();
+                String questionText = (questionTextOrigin == null || questionTextOrigin.isEmpty()) ? "未知" : questionTextOrigin;
                 String answerText = item.optString("answer", "").trim();
 
                 // 从文本中提取所有URL链接
-                List<String> urls = extractUrlsFromText(answerText);
-                for (String url : urls) {
-                    answerList.add(url);
+                List<String> links = extractUrlsFromText(answerText);
+                for (String link : links) {
+                    if (isType == TransferEngine.BAIDU.getValue()){
+                        if (!link.contains("baidu")) {
+                            continue;
+                        }
+                    }
+                    if (isType == TransferEngine.QUARK.getValue()){
+                        if (!link.contains("quark")) {
+                            continue;
+                        }
+                    }
+                    Source source = new Source(questionText, link, determineIsType(link));
+                    res.add(source);
                 }
-                count++;
             }
-            return answerList;
         }
-
-        // 处理单结果响应（其他接口）
-        String answerText = responseJson.optString("answer", "").trim();
-        List<String> urls = extractUrlsFromText(answerText);
-        int count = 0;
-        for (String url : urls) {
-            if (count >= maxResults) break;
-            answerList.add(url);
-            count++;
-        }
-
-        return answerList;
+        return res;
     }
 
     // 从文本中提取所有URL链接
@@ -164,72 +123,6 @@ public class ApiClient {
         }
 
         return urls;
-    }
-
-    private Map<String, String> processAnswers(List<String> answers) {
-        Map<String, String> resultMap = new HashMap<>();
-
-        for (String answer : answers) {
-            try {
-                // 0. 检查是否包含baidu或quark - 如果不包含则跳过
-                if (!answer.contains("baidu") && !answer.contains("quark")) {
-                    System.out.println("跳过非百度/夸克链接: " + answer);
-                    continue;
-                }
-
-                // 1. 解析code参数
-                String code = extractCodeFromUrl(answer);
-
-                // 2. 确定isType参数
-                int isType = determineIsType(answer);
-
-                // 3. 构建请求参数
-                Map<String, String> params = new HashMap<>();
-                params.put("url", answer);
-                params.put("expired_type", "2");
-                params.put("isType", String.valueOf(isType));
-                params.put("isSave", "0");
-
-                if (code != null && !code.isEmpty()) {
-                    params.put("code", code);
-                }
-
-                // 4. 发送API请求
-                String apiResponse = sendGetRequest("https://www.zzfdip.cyou/api/open/transfer", params);
-
-                // 5. 解析API响应
-                JSONObject responseJson = new JSONObject(apiResponse);
-                if (responseJson.getInt("code") == 200) {
-                    JSONObject data = responseJson.getJSONObject("data");
-                    String title = data.getString("title");
-                    String shareUrl = data.getString("share_url");
-
-                    // 6. 存入结果Map
-                    resultMap.put(title, shareUrl);
-                } else {
-                    // 处理API错误响应
-                    String errorMsg = responseJson.getString("message");
-                    logger.error("API调用失败: " + errorMsg + " | URL: " + answer);
-                }
-            } catch (Exception e) {
-                // 处理异常（记录日志等）
-                logger.error("处理答案时出错: " + answer);
-            }
-        }
-
-        return resultMap;
-    }
-
-    // 从URL中提取code参数
-    private String extractCodeFromUrl(String url) {
-        int pwdIndex = url.indexOf("pwd=");
-        if (pwdIndex != -1) {
-            String afterPwd = url.substring(pwdIndex + 4);
-            int endIndex = afterPwd.indexOf('&');
-            if (endIndex == -1) endIndex = afterPwd.length();
-            return afterPwd.substring(0, endIndex);
-        }
-        return null;
     }
 
     // 根据URL内容确定isType参数
@@ -425,8 +318,8 @@ public class ApiClient {
         // 测试接口
         String input = "不可思议星期二";
         ApiClient apiClient = new ApiClient();
-        String result = apiClient.callKobApiAndExtractResults(input);
-        System.out.println(result);
+        List<Source> sources = apiClient.callKobApiAndExtractResults(input,2);
+        System.out.println(sources);
 //        String accessToken = "90_6TARaUcHjJgqAjFT_3ENPvtV0bYqUvja5S16CSlwhQPRbK6BBTboxZg1DZCL_JIaFqvupzIfzyvoKJbex7JxaOGtiwc7fw9F2bvkUaZ26Xw8kZ_JBB31APh8hWwGHXbAGAWXN"; // 替换为你的 access_token
 //        String imagePath = "C:\\Users\\84053\\Desktop\\dlaopic.png"; // 替换为图片路径
 //        String type = "image";

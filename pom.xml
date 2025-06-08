@@ -79,7 +79,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring-boot.version}</version>
                 <configuration>
-                    <mainClass>com.zzf.wechatgzhzzf.WechatGzhZzfApplication</mainClass>
+                    <mainClass>com.zzf.wechatgzhzzf.SearchZzfApplication</mainClass>
                 </configuration>
                 <executions>
                     <execution>
