@@ -7,6 +7,9 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 public class WechatClient {
 
@@ -22,10 +25,13 @@ public class WechatClient {
     private final Object tokenLock = new Object();
 
     private void getToken() throws Exception {
-        String urlString = String.format("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=%s&secret=%s",
-                WECHAT_APP_ID,
-                WECHAT_APP_SECRET);
-        String tokenResponse = apiClient.sendGetRequest(urlString);
+        String urlString = "https://api.weixin.qq.com/cgi-bin/token";
+        //构建请求参数
+        Map<String, String> params = new HashMap<>();
+        params.put("grant_type", "client_credential");
+        params.put("appid", WECHAT_APP_ID);
+        params.put("secret", WECHAT_APP_SECRET);
+        String tokenResponse = apiClient.sendGetRequest(urlString,params);
         JSONObject tokenJson = new JSONObject(tokenResponse);
         String token = tokenJson.getString("access_token");
         System.out.println(token);
