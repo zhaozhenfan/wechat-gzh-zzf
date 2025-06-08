@@ -16,7 +16,7 @@ api:
   key-word: "帮我搜索"
   keyword-tip: "请输入前缀为「帮我搜索」的关键词并发送消息，例如：帮我搜索xxx\n\n如果搜不到，请联系管理员微信：vipvip4521"
 
-  max-results: 2
+  max-results: 1
 button:
   button1-content: "群机器人使用方法：\n直接给公众号发剧名消息即可。\n注意：本群所发内容均为免费分享，资源来自于网络，网盘里的任何广告不要信，谨防上当受骗！"
   button2-content: "EY_sTePQoAbeL20QSR6tyPvNwXeXSqYycJDv94lK-dU65haTEdrD9O21yBDCD3EP"

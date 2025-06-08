@@ -11,7 +11,7 @@ import java.util.List;
 
 
 @SpringBootApplication
-public class WechatGzhZzfApplication implements ApplicationRunner{
+public class WechatGzhZzfApplication{
 
     @Autowired
     private ApiClient apiClient;
@@ -21,11 +21,11 @@ public class WechatGzhZzfApplication implements ApplicationRunner{
 
     }
 
-    @Override
-    public void run(ApplicationArguments args) throws Exception {
-        String results = apiClient.callKobApiAndExtractResults("斗破苍穹");
-        System.out.println(results);
-    }
+//    @Override
+//    public void run(ApplicationArguments args) throws Exception {
+//        String results = apiClient.callKobApiAndExtractResults("斗破苍穹");
+//        System.out.println(results);
+//    }
 
 //    @Override
 //    public void run(ApplicationArguments args) throws Exception {
