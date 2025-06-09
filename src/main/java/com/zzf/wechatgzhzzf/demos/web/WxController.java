@@ -58,7 +58,7 @@ public class WxController {
     /**
      * 接口超时
      */
-    private final Long outTime = 4800L;
+    private final Long outTime = 4500L;
     private final TimeUnit outTimeUnit = TimeUnit.MILLISECONDS;
 
     @Autowired
@@ -106,49 +106,7 @@ public class WxController {
     }
 
     @PostMapping("/")
-    public String receiveMessage(HttpServletRequest request, HttpServletResponse response) {
-        String requestId = request.getHeader("X-Request-ID");
-
-        // 生成新请求ID
-        if(requestId == null) {
-            requestId = UUID.randomUUID().toString();
-            response.setHeader("X-Request-ID", requestId);
-        }
-
-        Future<String> future = futureMap.get(requestId);
-        String res = null;
-
-        if (future == null) {
-            // 首次请求
-            future = executor.submit(() -> receiveMessageForFuture(request));
-            try {
-                res = future.get(outTime, outTimeUnit);
-            } catch (TimeoutException e) {
-                futureMap.put(requestId, future); // 存储未完成future
-            } catch (Exception e) {
-                // 错误处理
-            }
-        } else {
-            // 重试请求
-            try {
-                if(!future.isDone()) {
-                    res = future.get(outTime, outTimeUnit); // 继续等待
-                }
-
-                // 无论成功与否都移除future
-                futureMap.remove(requestId);
-
-            } catch (TimeoutException e) {
-
-            } catch (Exception e) {
-                futureMap.remove(requestId);
-
-            }
-        }
-        return res;
-    }
-
-    public String receiveMessageForFuture(HttpServletRequest request) throws IOException {
+    public String receiveMessage(HttpServletRequest request) throws IOException, InterruptedException {
         ServletInputStream inputStream = request.getInputStream();
         Map<String, String> map = new HashMap<>();
         SAXReader reader = new SAXReader();
@@ -167,6 +125,40 @@ public class WxController {
         }
         logger.info("接收消息：" + map.toString());
         String msgType = map.get("MsgType");
+        String msgId = map.get("MsgId");
+        Future<String> future = futureMap.get(msgId);
+        String res = null;
+
+        if (future == null) {
+            // 首次请求
+            int i = 1;
+            future = executor.submit(() -> getReplyMessage(map, msgType));
+            try {
+                res = future.get(outTime, outTimeUnit);
+            } catch (TimeoutException e) {
+                futureMap.put(msgId, future); // 存储未完成future
+                Thread.sleep(1500L);
+            } catch (Exception e) {
+                // 错误处理
+            }
+        } else {
+            // 重试请求
+            try {
+                res = future.get(outTime, outTimeUnit); // 继续等待
+                // 无论成功与否都移除future
+                futureMap.remove(msgId);
+
+            } catch (TimeoutException e) {
+                Thread.sleep(1500L);
+            } catch (Exception e) {
+                futureMap.remove(msgId);
+
+            }
+        }
+        return res;
+    }
+
+    private String getReplyMessage(Map<String, String> map, String msgType) {
         String message = null;
         switch (msgType){
             case "text":
