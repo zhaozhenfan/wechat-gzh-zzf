@@ -1,6 +1,7 @@
 package com.zzf.wechatgzhzzf.demos.Service;
 
 import com.zzf.wechatgzhzzf.demos.config.SearchConfig;
+import com.zzf.wechatgzhzzf.demos.util.AdCleaner;
 import com.zzf.wechatgzhzzf.demos.web.WxController;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -188,7 +189,7 @@ public class ApiClient {
                 params.put("url", answer);
                 params.put("expired_type", "2");
                 params.put("isType", String.valueOf(isType));
-                params.put("isSave", "0");
+                params.put("isSave", "1");
 
                 if (code != null && !code.isEmpty()) {
                     params.put("code", code);
@@ -205,7 +206,7 @@ public class ApiClient {
                     String shareUrl = data.getString("share_url");
 
                     // 6. 存入结果Map
-                    resultMap.put(title, shareUrl);
+                    resultMap.put(AdCleaner.cleanAdvertisements(title), shareUrl);
                 } else {
                     // 处理API错误响应
                     String errorMsg = responseJson.getString("message");
