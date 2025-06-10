@@ -45,7 +45,8 @@ public class ApiClient {
             logger.error(e.getMessage());
         }
 
-        // 依次尝试各个搜索接口
+        List<Source> firstPairResults = new ArrayList<>();  // 存储每个响应第一个问答对的所有结果
+        List<Source> otherResults = new ArrayList<>();      // 存储其他问答对的结果
         for (String apiUrl : searchConfig.getSearchApiUrls()) {
             try {
                 // 准备请求体
@@ -56,49 +57,51 @@ public class ApiClient {
                 // 发送请求
                 String searchResponse = sendPostRequest(apiUrl, requestBody.toString());
 
-                // 提取结果
-                extractAnswers(res, searchResponse, isType);
+                // 处理响应
+                JSONObject responseJson = new JSONObject(searchResponse);
+                if (responseJson.has("list")) {
+                    JSONArray list = responseJson.getJSONArray("list");
+                    boolean isFirstItem = true;
 
+                    for (int i = 0; i < list.length(); i++) {
+                        JSONObject item = list.getJSONObject(i);
+                        String questionTextOrigin = item.optString("question", "").trim();
+                        String questionText = (questionTextOrigin == null || questionTextOrigin.isEmpty()) ? "未知" : questionTextOrigin;
+                        String answerText = item.optString("answer", "").trim();
 
+                        // 从文本中提取所有URL链接
+                        List<String> links = extractUrlsFromText(answerText);
+                        List<Source> currentSources = new ArrayList<>();
+
+                        for (String link : links) {
+                            if (isType == TransferEngine.BAIDU.getValue() && !link.contains("baidu")) {
+                                continue;
+                            }
+                            if (isType == TransferEngine.QUARK.getValue() && !link.contains("quark")) {
+                                continue;
+                            }
+                            currentSources.add(new Source(questionText, link, determineIsType(link)));
+                        }
+
+                        if (isFirstItem && !currentSources.isEmpty()) {
+                            // 当前响应的第一个问答对的所有结果
+                            firstPairResults.addAll(currentSources);
+                            isFirstItem = false;
+                        } else {
+                            // 其他问答对的结果
+                            otherResults.addAll(currentSources);
+                        }
+                    }
+                }
             } catch (Exception e) {
                 // 当前API查询失败，继续尝试下一个
                 continue;
             }
         }
-        // 所有API都尝试了
-        return res;
-    }
 
-    private List<Source> extractAnswers(List<Source> res, String apiResponse, Integer isType) throws JSONException {
-        JSONObject responseJson = new JSONObject(apiResponse);
-
-        // 处理包含list字段的响应（search接口）
-        if (responseJson.has("list")) {
-            JSONArray list = responseJson.getJSONArray("list");
-            for (int i = 0; i < list.length(); i++) {
-                JSONObject item = list.getJSONObject(i);
-                String questionTextOrigin = item.optString("question", "").trim();
-                String questionText = (questionTextOrigin == null || questionTextOrigin.isEmpty()) ? "未知" : questionTextOrigin;
-                String answerText = item.optString("answer", "").trim();
-
-                // 从文本中提取所有URL链接
-                List<String> links = extractUrlsFromText(answerText);
-                for (String link : links) {
-                    if (isType == TransferEngine.BAIDU.getValue()){
-                        if (!link.contains("baidu")) {
-                            continue;
-                        }
-                    }
-                    if (isType == TransferEngine.QUARK.getValue()){
-                        if (!link.contains("quark")) {
-                            continue;
-                        }
-                    }
-                    Source source = new Source(questionText, link, determineIsType(link));
-                    res.add(source);
-                }
-            }
-        }
+        // 合并结果：先放所有响应第一个问答对的结果，再放其他结果
+        res.addAll(firstPairResults);
+        res.addAll(otherResults);
         return res;
     }
 

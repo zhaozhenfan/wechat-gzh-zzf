@@ -24,7 +24,7 @@ public class SearchZzfApplication implements ApplicationRunner{
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        List<Source> sources = apiClient.callKobApiAndExtractResults("难哄",2);
+        List<Source> sources = apiClient.callKobApiAndExtractResults("庆余年",2);
         System.out.println(sources);
     }
 
