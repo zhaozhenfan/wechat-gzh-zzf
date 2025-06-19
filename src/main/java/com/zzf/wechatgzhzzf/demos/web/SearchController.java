@@ -26,6 +26,12 @@ public class SearchController {
             @RequestParam String title,
             @RequestParam int isType) {
 
+        // 去除标题前后的空格
+        title = title.trim();
+        // 检查标题是否为空
+        if (title.isEmpty()) {
+            return new Result(400, "搜索内容不能为空");
+        }
         // 调用API客户端方法获取结果
         List<Source> sources = null;
         try {
