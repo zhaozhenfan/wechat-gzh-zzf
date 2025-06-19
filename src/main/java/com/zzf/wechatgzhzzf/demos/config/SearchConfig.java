@@ -25,6 +25,7 @@ public class SearchConfig {
                 "http://" + urlPrefix + "/v/api/getDJ",
                 "http://" + urlPrefix + "/v/api/getJuzi",
                 "http://" + urlPrefix + "/v/api/getXiaoyu"
+                , "http://" + urlPrefix + "/v/api/getDyfx"
         };
     }
 

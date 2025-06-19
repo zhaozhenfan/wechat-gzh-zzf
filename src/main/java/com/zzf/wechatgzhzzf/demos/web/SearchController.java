@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -26,15 +27,18 @@ public class SearchController {
             @RequestParam int isType) {
 
         // 调用API客户端方法获取结果
-        List<Source> results = null;
+        List<Source> sources = null;
         try {
-            results = apiClient.callKobApiAndExtractResults(title, isType);
+            sources = apiClient.callKobApiAndExtractResults(title, isType);
+            if (sources == null || sources.isEmpty()){
+                return new Result(404,"搜索失败");
+            }
         } catch (Exception e) {
-            return new Result(500, "Failure");
+            return new Result(404, "搜索失败");
         }
 
         // 封装结果到Result对象
-        return new Result(200, "Success", results);
+        return new Result(200, "搜索成功", sources);
     }
 
 

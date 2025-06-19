@@ -112,13 +112,36 @@ public class ApiClient {
             return urls;
         }
 
-        // 正则表达式匹配URL
-        String regex = "(https?://[\\w.-]+(?:/\\S*)?)";
+        // 改进的正则表达式：更精确地匹配URL
+        String regex = "(https?://[\\w.-]+(?:/[^\\s\"'<>\\u4e00-\\u9fa5]*)?)";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(text);
 
+        // 匹配提取码的模式
+        Pattern pwdPattern = Pattern.compile("提取码[：:]\\s*(\\w{4})");
+
         while (matcher.find()) {
             String url = matcher.group(1).trim();
+            int start = matcher.start(1);
+            int end = matcher.end(1);
+
+            // 清理URL：移除转义字符、HTML实体和非法后缀
+            url = cleanUrl(url);
+
+            // 检查是否是百度网盘链接
+            if (url.contains("pan.baidu.com")) {
+                // 检查URL后20个字符内是否有提取码
+                int afterEnd = Math.min(end + 20, text.length());
+                String afterUrl = text.substring(end, afterEnd);
+                Matcher pwdMatcher = pwdPattern.matcher(afterUrl);
+
+                if (pwdMatcher.find()) {
+                    String pwd = pwdMatcher.group(1);
+                    // 将提取码转换为URL参数
+                    url = appendPwdParameter(url, pwd);
+                }
+            }
+
             // 确保URL是有效的
             if (url.startsWith("http://") || url.startsWith("https://")) {
                 urls.add(url);
@@ -126,6 +149,52 @@ public class ApiClient {
         }
 
         return urls;
+    }
+
+    // 清理URL：移除转义字符和非法后缀
+    private String cleanUrl(String url) {
+        // 处理常见的转义字符和HTML实体
+        url = url.replaceAll("\\\\[\"']", "")  // 移除转义双引号和单引号
+                .replaceAll("&quot;", "")     // 移除HTML实体引号
+                .replaceAll("&nbsp;", "")     // 移除HTML空格
+                .replaceAll("\\\\u003e", "")  // 移除Unicode转义的>
+                .replaceAll("\\\\u003c", ""); // 移除Unicode转义的<
+
+        // 移除URL末尾的非URL字符（如中文、标签等）
+        int lastValidIndex = 0;
+        for (int i = 0; i < url.length(); i++) {
+            char c = url.charAt(i);
+            if (c == '\"' || c == '\'' || c == '<' || c == '>' ||
+                    c == '\\' || c == ' ' || c == '，' || c == '”') {
+                break;
+            }
+            lastValidIndex = i + 1;
+        }
+
+        return url.substring(0, lastValidIndex);
+    }
+
+    // 添加pwd参数到百度网盘URL
+    private String appendPwdParameter(String url, String pwd) {
+        // 处理URL片段（如有#号则参数需要加在#号前）
+        int fragIndex = url.indexOf('#');
+        String baseUrl = url;
+        String fragment = "";
+
+        if (fragIndex != -1) {
+            baseUrl = url.substring(0, fragIndex);
+            fragment = url.substring(fragIndex);
+        }
+
+        // 添加参数前先确保没有重复的pwd参数
+        baseUrl = baseUrl.replaceAll("[?&]pwd=\\w+", "");
+
+        // 添加参数
+        if (baseUrl.contains("?")) {
+            return baseUrl + "&pwd=" + pwd + fragment;
+        } else {
+            return baseUrl + "?pwd=" + pwd + fragment;
+        }
     }
 
     // 根据URL内容确定isType参数

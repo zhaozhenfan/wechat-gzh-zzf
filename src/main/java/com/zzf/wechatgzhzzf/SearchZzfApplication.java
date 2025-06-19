@@ -12,21 +12,20 @@ import java.util.List;
 
 
 @SpringBootApplication
-public class SearchZzfApplication implements ApplicationRunner{
+public class SearchZzfApplication{
 
-    @Autowired
-    private ApiClient apiClient;
+//    @Autowired
+//    private ApiClient apiClient;
 
     public static void main(String[] args) {
         SpringApplication.run(SearchZzfApplication.class, args);
-
     }
 
-    @Override
-    public void run(ApplicationArguments args) throws Exception {
-        List<Source> sources = apiClient.callKobApiAndExtractResults("庆余年",2);
-        System.out.println(sources);
-    }
+//    @Override
+//    public void run(ApplicationArguments args) throws Exception {
+//        List<Source> sources = apiClient.callKobApiAndExtractResults("庆余年",2);
+//        System.out.println(sources);
+//    }
 
 //    @Override
 //    public void run(ApplicationArguments args) throws Exception {

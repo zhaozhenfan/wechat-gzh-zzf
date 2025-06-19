@@ -4,17 +4,17 @@ import java.util.List;
 
 public class Result {
     private Integer code;
-    private String message;
+    private String msg;
     private List<Source> data;
 
-    public Result(Integer code, String message) {
+    public Result(Integer code, String msg) {
         this.code = code;
-        this.message = message;
+        this.msg = msg;
     }
 
-    public Result(Integer code, String message, List<Source> data) {
+    public Result(Integer code, String msg, List<Source> data) {
         this.code = code;
-        this.message = message;
+        this.msg = msg;
         this.data = data;
     }
 
@@ -26,12 +26,12 @@ public class Result {
         this.code = code;
     }
 
-    public String getMessage() {
-        return message;
+    public String getMsg() {
+        return msg;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public void setMsg(String msg) {
+        this.msg = msg;
     }
 
     public List<Source> getData() {
